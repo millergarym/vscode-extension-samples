@@ -17,8 +17,10 @@ let client: LanguageClient;
 
 export function activate(context: ExtensionContext) {
 	// The server is implemented in node
+	// "/home/garym/devel/github.com-Microsoft-vscode-extension-samples/lsp-sample/home/garym/devel/github.com-Microsoft-vscode-extension-samples/lsp-sample/gosvr/propls"
 	let serverModule = context.asAbsolutePath(
-		path.join('server', 'out', 'server.js')
+		path.join('gosvr', 'lspproxy', 'lspproxy')
+		// path.join('/','home','garym','devel','github.com-Microsoft-vscode-extension-samples','lsp-sample','gosvr', 'propls')
 	);
 	// The debug options for the server
 	// --inspect=6009: runs the server in Node's Inspector mode so VS Code can attach to the server for debugging
@@ -27,11 +29,22 @@ export function activate(context: ExtensionContext) {
 	// If the extension is launched in debug mode then the debug server options are used
 	// Otherwise the run options are used
 	let serverOptions: ServerOptions = {
-		run: { module: serverModule, transport: TransportKind.ipc },
+		// run: { command: serverModule, transport: TransportKind.stdio },
+		run: { 
+			command: serverModule, 
+			transport: {
+				kind: TransportKind.socket,
+				port: 8888
+			}
+		},
 		debug: {
-			module: serverModule,
-			transport: TransportKind.ipc,
-			options: debugOptions
+			command: serverModule,
+			transport: {
+				kind: TransportKind.socket,
+				port: 8888
+			}
+			// transport: TransportKind.stdio, //,
+			// options: debugOptions
 		}
 	};
 

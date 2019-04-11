@@ -1,7 +1,7 @@
 {
-	"name": "lsp-sample",
-	"description": "A language server example",
-	"author": "Microsoft Corporation",
+	"name": "proto-lsp-sample",
+	"description": "A proto language server example",
+	"author": "Latebound",
 	"license": "MIT",
 	"version": "1.0.0",
 	"repository": {
@@ -49,7 +49,7 @@
 		"vscode:prepublish": "cd client && npm run update-vscode && cd .. && npm run compile",
 		"compile": "tsc -b",
 		"watch": "tsc -b -w",
-		"postinstall": "cd client && npm install && cd ../server && npm install && cd ..",
+		"postinstall": "cd client && npm install && cd ../gosvr/lspproxy && go build && cd ../..",
 		"test": "sh ./scripts/e2e.sh"
 	},
 	"devDependencies": {
