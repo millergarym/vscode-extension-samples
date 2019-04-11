@@ -2,8 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
-	"net"
 	"os"
 
 	"github.com/davecgh/go-spew/spew"
@@ -211,29 +209,9 @@ func main() {
 	q.Q("hw")
 	q.Q(os.Args)
 
-	ln, err := net.Listen("tcp", ":8888")
-	if err != nil {
-		q.Q("error", err)
-		os.Exit(1)
-	}
-	for {
-		fmt.Printf("listening")
-		conn, err := ln.Accept()
-		if err != nil {
-			q.Q("error", err)
-			os.Exit(1)
-		}
-		stream := jsonrpc2.NewHeaderStream(conn, conn)
-		srv := &Server{}
-		connLSP, _, _ := protocol.NewServer(stream, srv)
-		ctx := context.Background()
-		q.Q(connLSP.Run(ctx))
-	}
-
-	// srv := lsp.NewServer(stream)
-	// srv.Conn.Logger = logger(s.Trace, out)
-	// q.Q( srv.Conn.Run(ctx) )
+	stream := jsonrpc2.NewHeaderStream(os.Stdin, os.Stdout)
+	srv := &Server{}
+	connLSP, _, _ := protocol.NewServer(stream, srv)
+	ctx := context.Background()
+	q.Q(connLSP.Run(ctx))
 }
-
-// http.HandleFunc("/", greet)
-// http.ListenAndServe(":8080", nil)

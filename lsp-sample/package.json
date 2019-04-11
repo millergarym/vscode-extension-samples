@@ -49,7 +49,7 @@
 		"vscode:prepublish": "cd client && npm run update-vscode && cd .. && npm run compile",
 		"compile": "tsc -b",
 		"watch": "tsc -b -w",
-		"postinstall": "cd client && npm install && cd ../gosvr/lspproxy && go build && cd ../..",
+		"postinstall": "cd client && npm install && cd ../gosvr && go build && cd ..",
 		"test": "sh ./scripts/e2e.sh"
 	},
 	"devDependencies": {

@@ -19,7 +19,7 @@ export function activate(context: ExtensionContext) {
 	// The server is implemented in node
 	// "/home/garym/devel/github.com-Microsoft-vscode-extension-samples/lsp-sample/home/garym/devel/github.com-Microsoft-vscode-extension-samples/lsp-sample/gosvr/propls"
 	let serverModule = context.asAbsolutePath(
-		path.join('gosvr', 'lspproxy', 'lspproxy')
+		path.join('gosvr', 'propls')
 		// path.join('/','home','garym','devel','github.com-Microsoft-vscode-extension-samples','lsp-sample','gosvr', 'propls')
 	);
 	// The debug options for the server
