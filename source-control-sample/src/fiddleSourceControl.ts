@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { FiddleRepository, toExtension, downloadFiddle, areIdentical, uploadFiddle, Fiddle } from './fiddleRepository';
+import { FiddleRepository, toExtension, downloadFiddle, areIdentical, uploadFiddle, Fiddle, toFiddleId } from './fiddleRepository';
 import * as path from 'path';
 import { writeFileSync, existsSync, writeFile } from 'fs';
 import { FiddleConfiguration, parseFiddleId } from './fiddleConfiguration';
@@ -12,8 +12,8 @@ export class FiddleSourceControl implements vscode.Disposable {
 	private fiddleRepository: FiddleRepository;
 	private latestFiddleVersion: number = Number.POSITIVE_INFINITY; // until actual value is established
 	private _onRepositoryChange = new vscode.EventEmitter<Fiddle>();
-	private timeout: NodeJS.Timer;
-	private fiddle: Fiddle;
+	private timeout?: NodeJS.Timer;
+	private fiddle!: Fiddle;
 
 	constructor(context: vscode.ExtensionContext, private readonly workspaceFolder: vscode.WorkspaceFolder, fiddle: Fiddle, overwrite: boolean) {
 		this.jsFiddleScm = vscode.scm.createSourceControl('jsfiddle', 'JSFiddle #' + fiddle.slug, workspaceFolder.uri);
@@ -82,7 +82,7 @@ export class FiddleSourceControl implements vscode.Disposable {
 			// here we assume nobody updated the Fiddle on the server since we refreshed the list of versions
 			try {
 				let newFiddle = await uploadFiddle(this.fiddle.slug, this.fiddle.version + 1, html, js, css);
-				if (!newFiddle) return;
+				if (!newFiddle) { return; }
 				this.setFiddle(newFiddle, false);
 				this.jsFiddleScm.inputBox.value = '';
 			} catch (ex) {
@@ -112,11 +112,11 @@ export class FiddleSourceControl implements vscode.Disposable {
 	}
 
 	async tryCheckout(newVersion: number | undefined): Promise<void> {
-		if (!Number.isFinite(this.latestFiddleVersion)) return;
+		if (!Number.isFinite(this.latestFiddleVersion)) { return; }
 
 		if (newVersion === undefined) {
 			let allVersions = [...Array(this.latestFiddleVersion + 1).keys()]
-				.map(ver => new VersionQuickPickItem(ver, ver == this.fiddle.version));
+				.map(ver => new VersionQuickPickItem(ver, ver === this.fiddle.version));
 			let newVersionPick = await vscode.window.showQuickPick(allVersions, { canPickMany: false, placeHolder: 'Select a version...' });
 			if (newVersionPick) {
 				newVersion = newVersionPick.version;
@@ -126,7 +126,7 @@ export class FiddleSourceControl implements vscode.Disposable {
 			}
 		}
 
-		if (newVersion === this.fiddle.version) return; // the same version was selected
+		if (newVersion === this.fiddle.version) { return; } // the same version was selected
 
 		if (this.changedResources.resourceStates.length) {
 			let changedResourcesCount = this.changedResources.resourceStates.length;
@@ -143,9 +143,9 @@ export class FiddleSourceControl implements vscode.Disposable {
 	}
 
 	private setFiddle(newFiddle: Fiddle, overwrite: boolean) {
-		if (newFiddle.version > this.latestFiddleVersion) this.latestFiddleVersion = newFiddle.version;
+		if (newFiddle.version > this.latestFiddleVersion) { this.latestFiddleVersion = newFiddle.version; }
 		this.fiddle = newFiddle;
-		if (overwrite) this.resetFilesToCheckedOutVersion(); // overwrite local file content
+		if (overwrite) { this.resetFilesToCheckedOutVersion(); } // overwrite local file content
 		this._onRepositoryChange.fire(this.fiddle);
 		this.refreshStatusBar();
 
@@ -185,60 +185,12 @@ export class FiddleSourceControl implements vscode.Disposable {
 		});
 	}
 
-	/**
-	 * Refresh is used when the information on the server may have changed.
-	 * For example another user updates the Fiddle online.
-	 */
-	async refresh(): Promise<void> {
-		let latestVersion = this.fiddle.version || 0;
-		while (true) {
-			try {
-				let latestFiddle = await downloadFiddle(this.fiddle.slug, latestVersion);
-				this.latestFiddleVersion = latestVersion;
-				latestVersion++;
-			} catch (ex) {
-				// typically the ex.statusCode == 404, when there is no further version
-				break;
-			}
-		}
-
-		this.refreshStatusBar();
-	}
-
-	/**
-	 * Determines which version was checked out and finds the index of the latest version.
-	 */
-	async establishVersion(): Promise<void> {
-		let version = 0;
-		let latestVersion = Number.NaN;
-		let currentFiddle: Fiddle = undefined;
-		while (true) {
-			try {
-				let latestFiddle = await downloadFiddle(this.fiddle.slug, version);
-				latestVersion = version;
-				version++;
-				if (areIdentical(this.fiddle.data, latestFiddle.data)) {
-					currentFiddle = latestFiddle;
-				}
-			} catch (ex) {
-				// typically the ex.statusCode == 404, when there is no further version
-				break;
-			}
-		}
-
-		this.latestFiddleVersion = latestVersion;
-
-		// now we know the version of the current fiddle, let's set it
-		this.setFiddle(currentFiddle, false);
-	}
-
-
 	get onRepositoryChange(): vscode.Event<Fiddle> {
 		return this._onRepositoryChange.event;
 	}
 
 	onResourceChange(_uri: vscode.Uri): void {
-		if (this.timeout) clearTimeout(this.timeout);
+		if (this.timeout) { clearTimeout(this.timeout); }
 		this.timeout = setTimeout(() => this.tryUpdateChangedGroup(), 500);
 	}
 
@@ -251,6 +203,7 @@ export class FiddleSourceControl implements vscode.Disposable {
 		}
 	}
 
+	/** This is where the source control determines, which documents were updated, removed, and theoretically added. */
 	async updateChangedGroup(): Promise<void> {
 		// for simplicity we ignore which document was changed in this event and scan all of them
 		let changedResources: vscode.SourceControlResourceState[] = [];
@@ -278,12 +231,15 @@ export class FiddleSourceControl implements vscode.Disposable {
 		}
 
 		this.changedResources.resourceStates = changedResources;
+
+		// the number of modified resources needs to be assigned to the SourceControl.count filed to let VS Code show the number.
+		this.jsFiddleScm.count = this.changedResources.resourceStates.length;
 	}
 
 	/** Determines whether the resource is different, regardless of line endings. */
 	isDirty(doc: vscode.TextDocument): boolean {
 		let originalText = this.fiddle.data[toExtension(doc.uri)];
-		return originalText.replace('\r', '') != doc.getText().replace('\r', '');
+		return originalText.replace('\r', '') !== doc.getText().replace('\r', '');
 	}
 
 	toSourceControlResourceState(docUri: vscode.Uri, deleted: boolean): vscode.SourceControlResourceState {
@@ -311,6 +267,64 @@ export class FiddleSourceControl implements vscode.Disposable {
 		};
 
 		return resourceState;
+	}
+
+	/**
+	 * Refresh is used when the information on the server may have changed.
+	 * For example another user updates the Fiddle online.
+	 */
+	async refresh(): Promise<void> {
+		let latestVersion = this.fiddle.version || 0;
+		while (true) {
+			try {
+				let latestFiddle = await downloadFiddle(this.fiddle.slug, latestVersion);
+				this.latestFiddleVersion = latestVersion;
+				latestVersion++;
+			} catch (ex) {
+				// typically the ex.statusCode == 404, when there is no further version
+				break;
+			}
+		}
+
+		this.refreshStatusBar();
+	}
+
+	/**
+	 * Determines which version was checked out and finds the index of the latest version.
+	 *
+	 * When a fiddle is open by the hash code, the latest version is downloaded,
+	 * but extension does not know what version it is.
+	 */
+	async establishVersion(): Promise<void> {
+		let version = 0;
+		let latestVersion = Number.NaN;
+		let currentFiddle: Fiddle | undefined = undefined;
+		while (true) {
+			try {
+				let latestFiddle = await downloadFiddle(this.fiddle.slug, version);
+				latestVersion = version;
+				version++;
+				if (areIdentical(this.fiddle.data, latestFiddle.data)) {
+					currentFiddle = latestFiddle;
+				}
+			} catch (ex) {
+				// typically the ex.statusCode == 404, when there is no further version
+				break;
+			}
+		}
+
+		this.latestFiddleVersion = latestVersion;
+
+		// now we know the version of the current fiddle, let's set it
+		if (currentFiddle) {
+			this.setFiddle(currentFiddle, false);
+		}
+	}
+
+	/** Opens the fiddle in the default browser. */
+	openInBrowser() {
+		let url = "https://jsfiddle.net/" + toFiddleId(this.fiddle.slug, this.fiddle.version);
+		vscode.env.openExternal(vscode.Uri.parse(url));
 	}
 
 	dispose() {

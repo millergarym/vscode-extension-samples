@@ -5,7 +5,7 @@
 	"version": "0.0.1",
 	"publisher": "vscode-samples",
 	"engines": {
-		"vscode": "^1.31.0"
+		"vscode": "^1.32.0"
 	},
 	"categories": [
 		"SCM Providers"
@@ -52,6 +52,10 @@
 					"light": "resources/icons/light/refresh.svg",
 					"dark": "resources/icons/dark/refresh.svg"
 				}
+			},
+			{
+				"command": "extension.source-control.browse",
+				"title": "Open current Fiddle in the default browser"
 			}
 		],
 		"menus": {
@@ -70,6 +74,10 @@
 					"command": "extension.source-control.refresh",
 					"group": "navigation",
 					"when": "scmProvider == jsfiddle"
+				},
+				{
+					"command": "extension.source-control.browse",
+					"when": "scmProvider == jsfiddle"
 				}
 			]
 		}
@@ -77,16 +85,16 @@
 	"scripts": {
 		"vscode:prepublish": "npm run compile",
 		"compile": "tsc -p ./",
-		"watch": "tsc -watch -p ./",
-		"postinstall": "node ./node_modules/vscode/bin/install"
+		"lint": "tslint -p ./",
+		"watch": "tsc -watch -p ./"
 	},
 	"dependencies": {
 		"jsfiddle": "^1.1.7"
 	},
 	"devDependencies": {
 		"@types/node": "^8.10.25",
-		"tslint": "^5.11.0",
-		"typescript": "^2.6.1",
-		"vscode": "^1.1.32"
+		"tslint": "^5.16.0",
+		"typescript": "^3.5.1",
+		"@types/vscode": "^1.32.0"
 	}
 }

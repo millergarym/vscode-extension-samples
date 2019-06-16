@@ -2,7 +2,6 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-'use strict';
 
 import { Position, Selection, Range, TextDocument, TextEditor, TextEditorRevealType } from 'vscode';
 import { Motion, Motions } from './motions';
@@ -217,7 +216,7 @@ class PutOperator extends Operator {
 		let register = ctrl.getDeleteRegister();
 		if (!register) {
 			// No delete register - beep!!
-			return;
+			return false;
 		}
 
 		let str = register.content;

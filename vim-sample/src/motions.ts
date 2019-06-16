@@ -2,7 +2,6 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-'use strict';
 
 import { Position, TextDocument, window } from 'vscode';
 import { Words, WordCharacters } from './words';
@@ -10,9 +9,9 @@ import { Command, AbstractCommandDescriptor } from './common';
 
 export class MotionState {
 
-	public anchor: Position;
+	public anchor: Position | null;
 	public cursorDesiredCharacter: number;
-	public wordCharacterClass: WordCharacters;
+	public wordCharacterClass: WordCharacters | null;
 
 	constructor() {
 		this.cursorDesiredCharacter = -1;
