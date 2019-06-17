@@ -3,17 +3,17 @@ package main
 import (
 	"context"
 	"os"
+	"time"
 
 	"github.com/davecgh/go-spew/spew"
 	"github.com/golangq/q"
-	"golang.org/x/tools/jsonrpc2"
 	"golang.org/x/tools/lsp/protocol"
 )
 
-type Server struct {
+type server struct {
 }
 
-func (svr *Server) Initialize(ctx context.Context, req *protocol.InitializeParams) (*protocol.InitializeResult, error) {
+func (svr *server) Initialize(ctx context.Context, req *protocol.InitializeParams) (*protocol.InitializeResult, error) {
 	q.Q(req)
 	// type ServerCapabilities struct {
 	// 	InnerServerCapabilities
@@ -38,8 +38,11 @@ func (svr *Server) Initialize(ctx context.Context, req *protocol.InitializeParam
 				DocumentFormattingProvider:      true,
 				DocumentRangeFormattingProvider: true,
 				DocumentSymbolProvider:          true,
-				HoverProvider:                   true,
-				DocumentHighlightProvider:       true,
+				ExecuteCommandProvider: &protocol.ExecuteCommandOptions{
+					Commands: []string{"troncompile"},
+				},
+				HoverProvider:             true,
+				DocumentHighlightProvider: true,
 				SignatureHelpProvider: &protocol.SignatureHelpOptions{
 					TriggerCharacters: []string{"(", ","},
 				},
@@ -51,6 +54,28 @@ func (svr *Server) Initialize(ctx context.Context, req *protocol.InitializeParam
 			TypeDefinitionServerCapabilities: protocol.TypeDefinitionServerCapabilities{
 				TypeDefinitionProvider: true,
 			},
+			ImplementationServerCapabilities: protocol.ImplementationServerCapabilities{
+				ImplementationProvider: true,
+			},
+			WorkspaceFoldersServerCapabilities: protocol.WorkspaceFoldersServerCapabilities{
+				Workspace: &struct {
+					WorkspaceFolders *struct {
+						Supported           bool   `json:"supported,omitempty"`
+						ChangeNotifications string `json:"changeNotifications,omitempty"`
+					} `json:"workspaceFolders,omitempty"`
+				}{
+					WorkspaceFolders: &struct {
+						Supported           bool   `json:"supported,omitempty"`
+						ChangeNotifications string `json:"changeNotifications,omitempty"`
+					}{
+						Supported:           true,
+						ChangeNotifications: "tronlps",
+					},
+				},
+			},
+			DeclarationServerCapabilities: protocol.DeclarationServerCapabilities{
+				DeclarationProvider: true,
+			},
 		},
 	}
 
@@ -60,158 +85,181 @@ func (svr *Server) Initialize(ctx context.Context, req *protocol.InitializeParam
 	// }
 	return ret, nil
 }
-func (svr *Server) Initialized(ctx context.Context, req *protocol.InitializedParams) error {
+func (svr *server) Initialized(ctx context.Context, req *protocol.InitializedParams) error {
 	q.Q(req)
 	return nil
 }
-func (svr *Server) Shutdown(context.Context) error {
+func (svr *server) Shutdown(context.Context) error {
 	q.Q("shutdown")
 	return nil
 }
-func (svr *Server) Exit(context.Context) error {
+func (svr *server) Exit(context.Context) error {
 	q.Q("exit")
 	return nil
 }
-func (svr *Server) DidChangeWorkspaceFolders(ctx context.Context, req *protocol.DidChangeWorkspaceFoldersParams) error {
+func (svr *server) DidChangeWorkspaceFolders(ctx context.Context, req *protocol.DidChangeWorkspaceFoldersParams) error {
 	q.Q(req)
 	return nil
 }
-func (svr *Server) DidChangeConfiguration(ctx context.Context, req *protocol.DidChangeConfigurationParams) error {
+func (svr *server) DidChangeConfiguration(ctx context.Context, req *protocol.DidChangeConfigurationParams) error {
 	q.Q(req)
 	return nil
 }
-func (svr *Server) DidChangeWatchedFiles(ctx context.Context, req *protocol.DidChangeWatchedFilesParams) error {
+func (svr *server) DidChangeWatchedFiles(ctx context.Context, req *protocol.DidChangeWatchedFilesParams) error {
 	q.Q(req)
 	return nil
 }
-func (svr *Server) Symbols(ctx context.Context, req *protocol.WorkspaceSymbolParams) ([]protocol.SymbolInformation, error) {
+func (svr *server) Symbols(ctx context.Context, req *protocol.WorkspaceSymbolParams) ([]protocol.SymbolInformation, error) {
 	q.Q(req)
 	return nil, nil
 }
-func (svr *Server) ExecuteCommand(ctx context.Context, req *protocol.ExecuteCommandParams) (interface{}, error) {
+func (svr *server) ExecuteCommand(ctx context.Context, req *protocol.ExecuteCommandParams) (interface{}, error) {
 	q.Q(req)
 	return nil, nil
 }
-func (svr *Server) DidOpen(ctx context.Context, req *protocol.DidOpenTextDocumentParams) error {
+func (svr *server) DidOpen(ctx context.Context, req *protocol.DidOpenTextDocumentParams) error {
 	q.Q(req)
 	return nil
 }
-func (svr *Server) DidChange(ctx context.Context, req *protocol.DidChangeTextDocumentParams) error {
+func (svr *server) DidChange(ctx context.Context, req *protocol.DidChangeTextDocumentParams) error {
 	q.Q(req)
 	return nil
 }
-func (svr *Server) WillSave(ctx context.Context, req *protocol.WillSaveTextDocumentParams) error {
+func (svr *server) WillSave(ctx context.Context, req *protocol.WillSaveTextDocumentParams) error {
 	q.Q(req)
 	return nil
 }
-func (svr *Server) WillSaveWaitUntil(ctx context.Context, req *protocol.WillSaveTextDocumentParams) ([]protocol.TextEdit, error) {
+func (svr *server) WillSaveWaitUntil(ctx context.Context, req *protocol.WillSaveTextDocumentParams) ([]protocol.TextEdit, error) {
 	q.Q(req)
 	return nil, nil
 }
-func (svr *Server) DidSave(ctx context.Context, req *protocol.DidSaveTextDocumentParams) error {
+func (svr *server) DidSave(ctx context.Context, req *protocol.DidSaveTextDocumentParams) error {
 	q.Q(req)
 	return nil
 }
-func (svr *Server) DidClose(ctx context.Context, req *protocol.DidCloseTextDocumentParams) error {
+func (svr *server) DidClose(ctx context.Context, req *protocol.DidCloseTextDocumentParams) error {
 	q.Q(req)
 	return nil
 }
-func (svr *Server) Completion(ctx context.Context, req *protocol.CompletionParams) (*protocol.CompletionList, error) {
+func (svr *server) Completion(ctx context.Context, req *protocol.CompletionParams) (*protocol.CompletionList, error) {
+	q.Q(req)
+	cl := protocol.CompletionList{
+		IsIncomplete: false,
+		Items: []protocol.CompletionItem{
+			{
+				Label:         "test",
+				Kind:          protocol.TextCompletion,
+				Detail:        "This is a test",
+				Documentation: "this is the docs",
+			},
+			{
+				Label:         "test2",
+				Kind:          protocol.TextCompletion,
+				Detail:        "This is a test2",
+				Documentation: "this is the docs2",
+			},
+		},
+	}
+	return &cl, nil
+}
+func (svr *server) CompletionResolve(ctx context.Context, req *protocol.CompletionItem) (*protocol.CompletionItem, error) {
 	q.Q(req)
 	return nil, nil
 }
-func (svr *Server) CompletionResolve(ctx context.Context, req *protocol.CompletionItem) (*protocol.CompletionItem, error) {
+func (svr *server) Hover(ctx context.Context, req *protocol.TextDocumentPositionParams) (*protocol.Hover, error) {
 	q.Q(req)
 	return nil, nil
 }
-func (svr *Server) Hover(ctx context.Context, req *protocol.TextDocumentPositionParams) (*protocol.Hover, error) {
+func (svr *server) SignatureHelp(ctx context.Context, req *protocol.TextDocumentPositionParams) (*protocol.SignatureHelp, error) {
 	q.Q(req)
 	return nil, nil
 }
-func (svr *Server) SignatureHelp(ctx context.Context, req *protocol.TextDocumentPositionParams) (*protocol.SignatureHelp, error) {
+func (svr *server) Definition(ctx context.Context, req *protocol.TextDocumentPositionParams) ([]protocol.Location, error) {
 	q.Q(req)
 	return nil, nil
 }
-func (svr *Server) Definition(ctx context.Context, req *protocol.TextDocumentPositionParams) ([]protocol.Location, error) {
+func (svr *server) TypeDefinition(ctx context.Context, req *protocol.TextDocumentPositionParams) ([]protocol.Location, error) {
 	q.Q(req)
 	return nil, nil
 }
-func (svr *Server) TypeDefinition(ctx context.Context, req *protocol.TextDocumentPositionParams) ([]protocol.Location, error) {
+func (svr *server) Implementation(ctx context.Context, req *protocol.TextDocumentPositionParams) ([]protocol.Location, error) {
 	q.Q(req)
 	return nil, nil
 }
-func (svr *Server) Implementation(ctx context.Context, req *protocol.TextDocumentPositionParams) ([]protocol.Location, error) {
+func (svr *server) References(ctx context.Context, req *protocol.ReferenceParams) ([]protocol.Location, error) {
 	q.Q(req)
 	return nil, nil
 }
-func (svr *Server) References(ctx context.Context, req *protocol.ReferenceParams) ([]protocol.Location, error) {
+func (svr *server) DocumentHighlight(ctx context.Context, req *protocol.TextDocumentPositionParams) ([]protocol.DocumentHighlight, error) {
 	q.Q(req)
 	return nil, nil
 }
-func (svr *Server) DocumentHighlight(ctx context.Context, req *protocol.TextDocumentPositionParams) ([]protocol.DocumentHighlight, error) {
+func (svr *server) DocumentSymbol(ctx context.Context, req *protocol.DocumentSymbolParams) ([]protocol.DocumentSymbol, error) {
 	q.Q(req)
 	return nil, nil
 }
-func (svr *Server) DocumentSymbol(ctx context.Context, req *protocol.DocumentSymbolParams) ([]protocol.DocumentSymbol, error) {
+func (svr *server) CodeAction(ctx context.Context, req *protocol.CodeActionParams) ([]protocol.CodeAction, error) {
 	q.Q(req)
 	return nil, nil
 }
-func (svr *Server) CodeAction(ctx context.Context, req *protocol.CodeActionParams) ([]protocol.CodeAction, error) {
+func (svr *server) CodeLens(ctx context.Context, req *protocol.CodeLensParams) ([]protocol.CodeLens, error) {
 	q.Q(req)
 	return nil, nil
 }
-func (svr *Server) CodeLens(ctx context.Context, req *protocol.CodeLensParams) ([]protocol.CodeLens, error) {
+func (svr *server) CodeLensResolve(ctx context.Context, req *protocol.CodeLens) (*protocol.CodeLens, error) {
 	q.Q(req)
 	return nil, nil
 }
-func (svr *Server) CodeLensResolve(ctx context.Context, req *protocol.CodeLens) (*protocol.CodeLens, error) {
+func (svr *server) DocumentLink(ctx context.Context, req *protocol.DocumentLinkParams) ([]protocol.DocumentLink, error) {
 	q.Q(req)
 	return nil, nil
 }
-func (svr *Server) DocumentLink(ctx context.Context, req *protocol.DocumentLinkParams) ([]protocol.DocumentLink, error) {
+func (svr *server) DocumentLinkResolve(ctx context.Context, req *protocol.DocumentLink) (*protocol.DocumentLink, error) {
 	q.Q(req)
 	return nil, nil
 }
-func (svr *Server) DocumentLinkResolve(ctx context.Context, req *protocol.DocumentLink) (*protocol.DocumentLink, error) {
+func (svr *server) DocumentColor(ctx context.Context, req *protocol.DocumentColorParams) ([]protocol.ColorInformation, error) {
 	q.Q(req)
 	return nil, nil
 }
-func (svr *Server) DocumentColor(ctx context.Context, req *protocol.DocumentColorParams) ([]protocol.ColorInformation, error) {
+func (svr *server) ColorPresentation(ctx context.Context, req *protocol.ColorPresentationParams) ([]protocol.ColorPresentation, error) {
 	q.Q(req)
 	return nil, nil
 }
-func (svr *Server) ColorPresentation(ctx context.Context, req *protocol.ColorPresentationParams) ([]protocol.ColorPresentation, error) {
+func (svr *server) Formatting(ctx context.Context, req *protocol.DocumentFormattingParams) ([]protocol.TextEdit, error) {
 	q.Q(req)
 	return nil, nil
 }
-func (svr *Server) Formatting(ctx context.Context, req *protocol.DocumentFormattingParams) ([]protocol.TextEdit, error) {
+func (svr *server) RangeFormatting(ctx context.Context, req *protocol.DocumentRangeFormattingParams) ([]protocol.TextEdit, error) {
 	q.Q(req)
 	return nil, nil
 }
-func (svr *Server) RangeFormatting(ctx context.Context, req *protocol.DocumentRangeFormattingParams) ([]protocol.TextEdit, error) {
+func (svr *server) OnTypeFormatting(ctx context.Context, req *protocol.DocumentOnTypeFormattingParams) ([]protocol.TextEdit, error) {
 	q.Q(req)
 	return nil, nil
 }
-func (svr *Server) OnTypeFormatting(ctx context.Context, req *protocol.DocumentOnTypeFormattingParams) ([]protocol.TextEdit, error) {
+func (svr *server) Rename(ctx context.Context, req *protocol.RenameParams) ([]protocol.WorkspaceEdit, error) {
 	q.Q(req)
 	return nil, nil
 }
-func (svr *Server) Rename(ctx context.Context, req *protocol.RenameParams) ([]protocol.WorkspaceEdit, error) {
-	q.Q(req)
-	return nil, nil
-}
-func (svr *Server) FoldingRanges(ctx context.Context, req *protocol.FoldingRangeParams) ([]protocol.FoldingRange, error) {
+func (svr *server) FoldingRanges(ctx context.Context, req *protocol.FoldingRangeParams) ([]protocol.FoldingRange, error) {
 	q.Q(req)
 	return nil, nil
 }
 
 func main() {
-	q.Q("hw")
+	q.Q("hhw")
 	q.Q(os.Args)
-
-	stream := jsonrpc2.NewHeaderStream(os.Stdin, os.Stdout)
-	srv := &Server{}
-	connLSP, _, _ := protocol.NewServer(stream, srv)
-	ctx := context.Background()
-	q.Q(connLSP.Run(ctx))
+	if len(os.Args) > 1 {
+		tcpSvr()
+	}
+	for {
+		q.Q(tcpclient())
+		<-time.After(time.Second)
+	}
+	// 	stream := jsonrpc2.NewHeaderStream(os.Stdin, os.Stdout)
+	// 	srv := &server{}
+	// 	connLSP, _, _ := protocol.NewServer(stream, srv)
+	// 	ctx := context.Background()
+	// 	q.Q(connLSP.Run(ctx))
 }
